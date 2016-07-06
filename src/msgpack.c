@@ -165,6 +165,22 @@ static void mux_process_incoming_mouse_msg(cmp_ctx_t *cmp, nnStr *msg)
     callbacks.mux_receive_mouse(mouse_x, mouse_y, flags);
 }
 
+extern uint32_t g_fps;
+
+static void mux_process_incoming_update_msg(cmp_ctx_t *cmp, nnStr *msg)
+{
+    uint32_t fps;
+
+    if (!cmp_read_uint(cmp, &fps)) {
+        printf("MSGPACK: update_msg: fps wasn't read properly\n");
+        return;
+    }
+
+    g_fps = fps;
+
+    pthread_cond_signal(&display->shm_cond);
+}
+
 /**
  * @brief Serializes incoming raw data into cmp struct for processing and invokes correct deserialization function
  * for type of message received.
@@ -206,7 +222,7 @@ void mux_process_incoming_msg(void *buf, int nbytes)
             break;
         case DISPLAY_UPDATE_COMPLETE:
 //            printf("DEBUG: Signaling shm_cond for DISPLAY_UPDATE_COMPLETE wakeup\n");
-            pthread_cond_signal(&display->shm_cond);
+            mux_process_incoming_update_msg(&cmp, &msg);
             break;
         default:
             printf("ERROR: Invalid message type\n");

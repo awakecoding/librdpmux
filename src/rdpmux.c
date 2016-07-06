@@ -9,6 +9,7 @@
 #include "0mq.h"
 #include "queue.h"
 
+uint32_t g_fps = 15;
 InputEventCallbacks callbacks;
 MuxDisplay *display;
 
@@ -204,7 +205,7 @@ __PUBLIC void mux_display_switch(pixman_image_t *surface)
  * This function attempts to lock the shared memory region, and if it succeeds, will sync the framebuffer
  * to the shared memory and copy the current dirty update for transmission.
  */
-__PUBLIC void mux_display_refresh()
+__PUBLIC uint64_t mux_display_refresh()
 {
     if (display->dirty_update)
     {
@@ -280,6 +281,8 @@ __PUBLIC void mux_display_refresh()
     } else {
         //printf("RDPMUX: Refresh deferred\n");
     }
+
+    return (uint64_t) (1000 / g_fps);
 }
 
 /*
